@@ -149,7 +149,7 @@ class EnvironmentManager:
         subprocess.run([str(pip_path), "install", "--upgrade", "pip", "ruff", "pytest", "pip-tools"], check=True, stdout=sys.stderr)
 
 class UpgradeManager:
-    CURRENT_VERSION = 2
+    CURRENT_VERSION = 3
     
     def __init__(self, root: Path):
         self.root = root
@@ -172,24 +172,34 @@ class UpgradeManager:
         
         if old_version < 2:
             self._upgrade_to_v2()
+        
+        if old_version < 3:
+            self._upgrade_to_v3()
 
         # Update metadata
         self.meta_file.write_text(json.dumps({"scaffold_version": self.CURRENT_VERSION}, indent=2))
         log("Upgrade complete.")
 
     def _upgrade_to_v2(self):
-        # Version 2 adds gemini-logs and expands GEMINI.md
+        log("- Adding gemini-logs and backend/alembic directories")
+        # StructureManager handles these folders anyway
+
+    def _upgrade_to_v3(self):
+        # Version 3 forces the expansion of GEMINI.md
         log("- Expanding GEMINI.md (backing up existing as .old)")
         gemini_md = self.root / "GEMINI.md"
         if gemini_md.exists():
-            shutil.copy(gemini_md, gemini_md.with_suffix(".md.old"))
+            backup_path = gemini_md.with_suffix(".md.old")
+            # If a backup already exists, use a numbered one
+            count = 1
+            while backup_path.exists():
+                backup_path = gemini_md.with_suffix(f".md.old.{count}")
+                count += 1
+            shutil.copy(gemini_md, backup_path)
             gemini_md.unlink()
         
         bm = BoilerplateManager(self.root)
         bm.write_gemini_md()
-        
-        log("- Adding gemini-logs and backend/alembic directories")
-        # StructureManager is already idempotent, so just running it handles new folders
 
 def main():
     try:
