@@ -201,10 +201,33 @@ class UpgradeManager:
         bm = BoilerplateManager(self.root)
         bm.write_gemini_md()
 
+import sys
+import subprocess
+import json
+import traceback
+import shutil
+import argparse
+from pathlib import Path
+
+def log(message, level="INFO"):
+    """Logs to stderr for Gemini CLI hook compatibility."""
+    prefix = f"[{level}] " if level != "INFO" else ""
+    print(f"{prefix}{message}", file=sys.stderr, flush=True)
+
+class GitManager:
+# ... (rest of the classes remain the same until main)
+
 def main():
+    parser = argparse.ArgumentParser(description="Gemini Project Scaffolding Tool")
+    parser.add_argument("--manual", action="store_true", help="Run in manual interactive mode")
+    args = parser.parse_args()
+
     try:
         root = Path.cwd()
-        log(f"Project path: {root}")
+        if args.manual:
+            log("🚀 Starting Manual Full-Stack Initialization...")
+        else:
+            log(f"Checking project at: {root}")
         
         # 1. Basics
         GitManager(root).ensure_init()
@@ -217,12 +240,18 @@ def main():
         BoilerplateManager(root).ensure_boilerplate()
         EnvironmentManager(root).ensure_venv()
         
+        if args.manual:
+            log("\n✅ SUCCESS: Project initialized and aligned with Expert Standards.")
+            log(f"   Root: {root}")
+            log("   Venv: .venv (packages installed)")
+            log("   Stack: FastAPI, Next.js 15, Celery, Redis")
+
         print(json.dumps({"status": "success", "message": "Project is up to date"}))
     except Exception as e:
-        log("\n" + "="*40)
-        log("ERROR DETECTED")
-        log(traceback.format_exc())
-        log("="*40)
+        log("\n" + "="*40, "ERROR")
+        log("SCAFFOLDING FAILURE", "ERROR")
+        log(traceback.format_exc(), "ERROR")
+        log("="*40, "ERROR")
         print(json.dumps({"status": "error", "message": str(e)}))
         sys.exit(1)
 
