@@ -1,54 +1,42 @@
 # Gemini Project Scaffolding Hook
 
-A robust, idempotent Python script designed to serve as a `SessionStart` hook for the Gemini CLI. This tool automates the creation of a professional monorepo structure, initializes Git, sets up a Python virtual environment, and enforces strict engineering standards via a project-level `GEMINI.md`.
+A robust, idempotent Python script designed to serve as a scaffolding tool for the Gemini CLI. It automates the creation of a professional monorepo structure, initializes Git, sets up a Python virtual environment, and enforces strict engineering standards.
 
 ## Features
 
-- **Standardized Monorepo Layout:** Automatically creates folders for `backend`, `frontend`, `systemd`, `tests`, `docs`, and specialized logging directories.
-- **Automated Environment Setup:** Creates a `.venv`, upgrades `pip`, and installs essential development tools (`ruff`, `pytest`, `pip-tools`).
-- **Idempotent Git Initialization:** Ensures the project is a Git repository without overwriting existing `.git` configurations.
-- **Standard Root Files:** Generates `.gitignore`, `Makefile`, `.env.example`, and `README.md` if missing.
-- **Instruction Enforcement:** Generates a comprehensive `GEMINI.md` file that guides the AI agent on project-specific stack rules, data flow mandates, and coding standards.
-- **Versioned Upgrades:** Includes a migration system (`.project_meta.json`) to safely upgrade existing projects to newer scaffolding standards.
+- **Standardized Monorepo Layout:** Backend (FastAPI), Frontend (Next.js 15), workers, migrations, and logging.
+- **Automated Environment Setup:** Configures `.venv` with `ruff`, `pytest`, and `pip-tools`.
+- **Instruction Enforcement:** Generates a comprehensive project-level `GEMINI.md` for AI agents.
+- **Versioned Upgrades:** Safely migrates existing projects to newer scaffolding standards.
 
-## Project Structure Generated
+## Deployment Models
 
-```text
-.
-├── backend/
-│   ├── app/            # FastAPI logic
-│   ├── workers/        # Celery workers
-│   └── alembic/        # DB migrations
-├── frontend/           # Next.js 15 App
-├── systemd/            # Linux unit files
-├── scripts/            # Operational utilities
-├── tests/              # Pytest suite
-├── docs/               # Documentation
-├── delete/             # Soft-deleted files
-├── logs/               # App logs
-├── gemini-logs/        # AI Session logs
-├── gemini-inputs/      # AI User inputs
-├── .venv/              # Python virtual environment
-├── GEMINI.md           # AI operating rules
-└── Makefile            # Task automation
-```
+This tool can be used in two ways depending on your workflow preference.
 
-## Installation & Usage
-
-### 1. Deploy the Script
-Place the `gemini_session_start.py` script in a persistent location (e.g., `~/coding-agent-config/`).
-
-```bash
-mkdir -p ~/coding-agent-config
-cp gemini_session_start.py ~/coding-agent-config/
-chmod +x ~/coding-agent-config/gemini_session_start.py
-```
-
-### 2. Configure Gemini CLI Hook
-Add the script to your global Gemini CLI settings to ensure it runs every time you start a session in a new or existing project.
+### Model A: Manual Slash Command (Recommended for control)
+Trigger the scaffolding only when you want it by adding a custom command to Gemini.
 
 Edit `/root/.gemini/settings.json`:
+```json
+{
+  "commands": [
+    {
+      "name": "init-full-stack-project",
+      "type": "command",
+      "command": "python3 /root/coding-agent-config/gemini_session_start.py --manual",
+      "description": "Initialize or upgrade the current project"
+    }
+  ]
+}
+```
+**Usage:** Type `/init-full-stack-project` inside Gemini.
 
+---
+
+### Model B: Automated SessionStart Hook
+Automatically ensure every project is scaffolded or upgraded every time you start a Gemini session.
+
+Edit `/root/.gemini/settings.json`:
 ```json
 {
   "hooks": {
@@ -60,7 +48,7 @@ Edit `/root/.gemini/settings.json`:
             "name": "project-scaffolding",
             "type": "command",
             "command": "python3 /root/coding-agent-config/gemini_session_start.py",
-            "description": "Runs the project scaffolding script at session start"
+            "description": "Auto-scaffold at session start"
           }
         ]
       }
@@ -69,25 +57,14 @@ Edit `/root/.gemini/settings.json`:
 }
 ```
 
-### 3. Usage
-Simply navigate to any directory and start Gemini:
+## Installation
 
-```bash
-mkdir my-new-project && cd my-new-project
-gemini
-```
+1. **Clone/Download:** Place `gemini_session_start.py` in `~/coding-agent-config/`.
+2. **Make Executable:** `chmod +x ~/coding-agent-config/gemini_session_start.py`
+3. **Configure Settings:** Apply one of the models above to your global `settings.json`.
 
-The script will automatically detect if the project needs scaffolding or an upgrade and execute the necessary steps before the first prompt.
-
-## Tech Stack Defaults
-The generated scaffold is optimized for:
-- **Frontend:** Next.js 15 (App Router), TypeScript, Tailwind.
-- **Backend:** FastAPI, Pydantic, SQLAlchemy.
-- **Database:** PostgreSQL + Alembic.
-- **Background Jobs:** Celery + Redis.
-
-## Contributing
-This project is designed for internal developer productivity. Feel free to fork and modify the `StructureManager` or `BoilerplateManager` classes to suit your specific tech stack.
+## Tech Stack
+Optimized for Next.js 15, FastAPI, PostgreSQL, Celery, and Redis.
 
 ## License
 MIT
